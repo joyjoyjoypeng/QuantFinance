@@ -2,10 +2,23 @@
 This is a test file for local_linear.py
 '''
 import math
+from sqlalchemy import true
 import local_linear
 import pytest
 X_raw = local_linear.file_import("xin.dms")
 Y_raw = local_linear.file_import("yin.dms")
+Output_file = local_linear.main("xin.dms","yin.dms","output.dms",3)
+
+def test_main_arguments():
+    '''
+    This function tests whether invalid arguments raise an error
+    '''
+    with pytest.raises(TypeError):
+        local_linear.main("xin.dms","yin.dms","output.dms")
+    with pytest.raises(TypeError):
+        local_linear.main("xin.dms","yin.dms","output.dms", 3, true, "xout.dms", "additional")
+    with pytest.raises(ValueError):
+        local_linear.main("xin.dms","yin.dms","output.dms","3")
 
 def is_float(data):
     '''
@@ -43,8 +56,6 @@ def test_main_output():
     This function is used to test whether the output data set is consisted of floats
     and has a matching length as the input data sets.
     '''
-    output_file = local_linear.main("xin.dms","yin.dms","output.dms",3,True)
-    output_raw = local_linear.file_import(output_file)
+    output_raw = local_linear.file_import(Output_file)
     is_float(output_raw)
     assert len(output_raw) == len(X_raw) == len(Y_raw)
-    
