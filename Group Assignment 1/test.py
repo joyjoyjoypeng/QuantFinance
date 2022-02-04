@@ -2,7 +2,6 @@
 This is a test file for local_linear.py
 '''
 import math
-from sqlalchemy import true
 import local_linear
 import pytest
 X_raw = local_linear.file_import("xin.dms")
@@ -16,7 +15,7 @@ def test_main_arguments():
     with pytest.raises(TypeError):
         local_linear.main("xin.dms","yin.dms","output.dms")
     with pytest.raises(TypeError):
-        local_linear.main("xin.dms","yin.dms","output.dms", 3, true, "xout.dms", "additional")
+        local_linear.main("xin.dms","yin.dms","output.dms", 3, True, "xout.dms", "additional")
     with pytest.raises(ValueError):
         local_linear.main("xin.dms","yin.dms","output.dms","3")
 
