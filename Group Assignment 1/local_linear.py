@@ -26,18 +26,6 @@ import math
 import numpy as np
 from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--x', required = True, help = "input file of x data")
-parser.add_argument('--y', required = True, help = "input file of y data")
-parser.add_argument('--output', required = True, help = "file path of the output")
-parser.add_argument('--num_folds', type = int, required=True, help = "number of k-folds")
-parser.add_argument('--plot', type = bool, help = "a plot of the input and prediction data")
-parser.add_argument('--xout', help = "file path to a set of different x for prediction")
-args = parser.parse_args()
-
-
 def file_import(file):
     '''
     Imports a file and stores it as an array
@@ -46,14 +34,14 @@ def file_import(file):
         inputs= np.array(list(map(lambda f: float(f.strip()), vals.readlines())))
     return inputs
 
-def get_weight(x_training, x_actual, h_val):
+def get_weight(x_training, x_actual, bandwidth_value):
     '''
     Gets weight
     '''
-    weight_k = math.exp(-((x_training - x_actual) ** 2) / h_val)
+    weight_k = math.exp(-((x_training - x_actual) ** 2) / bandwidth_value)
     return weight_k
 
-h_values = np.linspace(0.1, 0.2, 2)
+bandwidth_values = np.linspace(0.1, 0.2, 2)
 
 def get_lowest_h(x_train, y_train):
     '''
@@ -61,7 +49,7 @@ def get_lowest_h(x_train, y_train):
     '''
     mse_container = {}
 
-    for h_val in h_values:
+    for h_val in bandwidth_values:
         errors = []
         for (z_index, z_val) in enumerate(x_train):
             k_vals = []
@@ -72,7 +60,7 @@ def get_lowest_h(x_train, y_train):
                     y_vals.append(y_train[x_index])
 
             y_hat = 0
-            for (x_index, x_val) in range(len(k_vals)):
+            for (x_index, x_val) in enumerate(k_vals):
                 weight = x_val / sum(k_vals)
                 y_hat += weight * y_vals[x_index]
 
@@ -99,7 +87,7 @@ def for_testing(x_test, y_test, h_val):
                 y_vals.append(y_test[x_index])
 
         y_hat = 0
-        for (x_index, x_val) in range(len(k_vals)):
+        for (x_index, x_val) in enumerate(k_vals):
             weight = x_val / sum(k_vals)
             y_hat += weight * y_vals[x_index]
 
@@ -109,12 +97,12 @@ def for_testing(x_test, y_test, h_val):
     mse = sum(errors)/len(errors)
     return [h_val, mse]
 
-def get_optimal_h(the_x, the_y, folds):
+def get_optimal_h(the_x, the_y, k_folds):
     '''
     Combines the previous two functions to obtain an optimal h
     across all the folds
     '''
-    kf_creator = KFold(n_splits=folds, shuffle=True, random_state=42) # Change to np.random later
+    kf_creator = KFold(n_splits=k_folds, shuffle=True, random_state=np.random) # Change to np.random later
     tests = []
     counter = 0
     for train_index, test_index in kf_creator.split(the_x):
@@ -162,6 +150,7 @@ def create_output(pred, output):
         for i in range(len(pred)-1):
             new_file.write(str(pred[i]) + "\n")
         new_file.write(str(pred[-1]))
+    return output
 
 def create_plot(x_vals, y_vals, pred):
     '''
@@ -176,28 +165,38 @@ def create_plot(x_vals, y_vals, pred):
     plt.savefig('Plot of Predictions.png')
 
 
-def main (xin, yin, output, k, plot = None, xout = None):
+def main (xin, yin, output, k_folds, plot = None, xout = None):
     '''
     Main
+    return something for easier testing
     '''
     x_inputs = file_import(xin)
     y_inputs = file_import(yin)
-    bandwidth = get_optimal_h(x_inputs, y_inputs, k)
+    bandwidth = get_optimal_h(x_inputs, y_inputs, k_folds)
 
     if xout:
         new_x_inputs = file_import(xout)
-        pred = actual_prediction(new_x_inputs, y_inputs, bandwidth)
+        y_prediction = actual_prediction(new_x_inputs, y_inputs, bandwidth)
     else:
-        pred = actual_prediction(x_inputs, y_inputs, bandwidth)
+        y_prediction = actual_prediction(x_inputs, y_inputs, bandwidth)
 
-    create_output(pred, output)
+    result = create_output(y_prediction, output)
 
     if plot:
         if xout:
-            create_plot(new_x_inputs, y_inputs, pred)
+            create_plot(new_x_inputs, y_inputs, y_prediction)
         else:
-            create_plot(x_inputs, y_inputs, pred)
+            create_plot(x_inputs, y_inputs, y_prediction)
+    return result
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--x', required = True, help = "input file of x data")
+    parser.add_argument('--y', required = True, help = "input file of y data")
+    parser.add_argument('--output', required = True, help = "file path of the output")
+    parser.add_argument('--num_folds', type = int, required=True, help = "number of k-folds")
+    parser.add_argument('--plot', type = bool, help = "a plot of the input and prediction data")
+    parser.add_argument('--xout', help = "file path to a set of different x for prediction")
+    args = parser.parse_args()
     main(args.x,args.y,args.output,args.num_folds,args.plot,args.xout)
