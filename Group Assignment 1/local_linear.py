@@ -10,7 +10,8 @@ numeric data – one containing the x variable and the other containing the y va
 file path, and the number of folds. So at it's very basic level, the program could be invoked
 as follows:
 
-python local_linear.py --x xin –-y yin –-output output –-num_folds 10
+python local_linear.py
+--x xin.dms –-y yin.dms –-output output.dms –-num_folds 10 --plot true --xout xout.dms
 
 And in output, you would write a n x 1 column of numeric data containing the values of the fitted
 function evaluated at the points found in xin.
@@ -102,7 +103,7 @@ def get_optimal_h(the_x, the_y, k_folds):
     Combines the previous two functions to obtain an optimal h
     across all the folds
     '''
-    kf_creator = KFold(n_splits=k_folds, shuffle=True, random_state=np.random) # Change to np.random later
+    kf_creator = KFold(n_splits=k_folds, shuffle=True, random_state=np.random)
     tests = []
     counter = 0
     for train_index, test_index in kf_creator.split(the_x):
@@ -180,14 +181,14 @@ def main (xin, yin, output, k_folds, plot = None, xout = None):
     else:
         y_prediction = actual_prediction(x_inputs, y_inputs, bandwidth)
 
-    result = create_output(y_prediction, output)
+    output_file = create_output(y_prediction, output)
 
     if plot:
         if xout:
             create_plot(new_x_inputs, y_inputs, y_prediction)
         else:
             create_plot(x_inputs, y_inputs, y_prediction)
-    return result
+    return output_file
 
 
 if __name__ == '__main__':
