@@ -10,7 +10,7 @@ numeric data - one containing the x variable and the other containing the y vari
 file path, and the number of folds. So at it's very basic level, the program could be invoked
 as follows:
 
-python local_linear.py --x xin.dms --y yin.dms --output output.dms --num_folds 10 
+python local_linear.py --x xin.dms --y yin.dms --output output.dms --num_folds 10
 
 Optional arguments:
 --plot True --xout xout.dms
@@ -34,7 +34,7 @@ def file_import(file):
     '''
     This function imports a file and stores its contents in an array
 
-    Inputs: 
+    Inputs:
         file (path): The file to be imported
 
     Returns:
@@ -50,9 +50,9 @@ def get_weight(x_training, x_actual, bandwidth_value):
     This function returns the weight of the x_actual in estimating the y value of the x_training,
     given a specific bandwitdth_value
 
-    Inputs: 
+    Inputs:
         x_training (float): The x value that is being trained
-        x_actual (float): The x value whose weight is being computed 
+        x_actual (float): The x value whose weight is being computed
         bandwidth_value (float): The bandwidth being tested in a run
 
     Returns:
@@ -66,10 +66,10 @@ bandwidth_values = np.linspace(0.1, 1, 10)
 
 def get_lowest_h(x_train, y_train):
     '''
-    This function tests all the possible bandwidth values and returns the one that produces the lowest
-    MSE for a particular training set in a fold
+    This function tests all the possible bandwidth values and returns
+    the one that produces the lowest MSE for a particular training set in a fold
 
-    Inputs: 
+    Inputs:
         x_train (array): The x values being trained in a run
         y_train (array): The actual y values for the x values being trained
 
@@ -105,10 +105,10 @@ def get_lowest_h(x_train, y_train):
 
 def for_testing(x_test, y_test, h_val):
     '''
-    This function is used to test the h value that had returned the lowest MSE during 
+    This function is used to test the h value that had returned the lowest MSE during
     the training phase against the x and y values in the testing set
-    
-    Inputs: 
+
+    Inputs:
         x_test (array): The x values being tested in a run
         y_test (array): The actual y values for the x values being tested
         h_val (float): The h value that had caused the lowest MSE to be obtained
@@ -137,15 +137,15 @@ def for_testing(x_test, y_test, h_val):
 
     mse = sum(errors)/len(errors)
     test_output = [h_val, mse]
-    
+
     return test_output
 
 def get_optimal_h(the_x, the_y, k_folds):
     '''
     This function combines the previous two functions to obtain an optimal h
     across all the training and testing phases of the folds
-    
-    Inputs: 
+
+    Inputs:
         the_x (array): The entire set of x values
         the_y (array): The entire set of y values
         k_folds (int): The number of folds to be used for cross validation
@@ -175,9 +175,9 @@ def get_optimal_h(the_x, the_y, k_folds):
 def actual_prediction(x_set, y_set, h_val):
     '''
     This function conducts the actual prediction on the x_set using the other
-    y_set values and returns the predictions 
-    
-    Inputs: 
+    y_set values and returns the predictions
+
+    Inputs:
         x_set (array): The set of x values for which predictions need to be conducted
         y_set (array): The set of y values that will be used for predictions
         h_val (float): The optimal h that was found during the cross validation phase
@@ -206,8 +206,8 @@ def actual_prediction(x_set, y_set, h_val):
 def create_output(pred, output):
     '''
     This function reates a new file given the predicted y values
-    
-    Inputs: 
+
+    Inputs:
         pred (array): The list of predicted y values
         output (path): The path for the output file to be created
 
@@ -226,8 +226,8 @@ def create_plot(x_vals, y_vals, pred):
     '''
     This function creates a plot showcasing the y_vals and predicted
     y values against the x_vals
-    
-    Inputs: 
+
+    Inputs:
         x_vals (array): The array of x values
         y_vals (array): The array of y values
         pred (list): The list of predicted y values
@@ -248,8 +248,8 @@ def create_plot(x_vals, y_vals, pred):
 def main (xin, yin, output, k_folds, plot = None, xout = None):
     '''
     This is the main function containing all the others
-    
-    Inputs: 
+
+    Inputs:
         xin (path): The path to the original x values
         yin (path): The path to the original y values
         output (path): The path foe the output file to be created
