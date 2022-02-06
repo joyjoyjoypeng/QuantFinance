@@ -62,7 +62,7 @@ def get_weight(x_training, x_actual, bandwidth_value):
     weight_k = math.exp(-((x_training - x_actual) ** 2) / bandwidth_value)
     return weight_k
 
-bandwidth_values = np.linspace(0.1, 0.2, 2)
+bandwidth_values = np.linspace(0.1, 1, 10)
 
 def get_lowest_h(x_train, y_train):
     '''
