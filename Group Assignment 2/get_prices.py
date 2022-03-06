@@ -22,10 +22,17 @@ Class Stock
 class Stock:
     def __init__(self, ticker, beginning_date, ending_date, aum):
         self.tick_data=self.compute_mm(ticker, beginning_date, ending_date, aum)
-        self.aum=aum
         self.beginning_date=self.get_beginning_date()
         self.ending_date=self.get_end_date()
-        self.numdays=self.get_num_days(beginning_date, ending_date)
+        self.numdays=(ending_date-beginning_date).days
+        self.initial_aum=aum
+        self.tsr = self.calc_TSR()
+        self.tr = self.calc_TR()
+        self.aror= self.calc_aror()
+        self.final_aum = self.get_final_value()
+        self.average_aum = self.calc_avg_aum()
+        self.max_aum = self.get_max_aum()
+        self.pnl = self.get_pnl()
     
     #need to change the for loop formatting
     def compute_mm(self, ticker, start_d, end_d, aum):
@@ -48,13 +55,10 @@ class Stock:
 
     def get_end_date(self):
         return list(self.tick_data.keys())[-1]
-    
-    def get_num_days(self,beginning_date, ending_date):
-        return (ending_date-beginning_date).days
 
     def get_final_value(self):
         return self.tick_data[self.ending_date][1]
-
+    
     def calc_TSR(self):
         initial_price = self.tick_data[self.beginning_date][0]
         final_price = self.tick_data[self.ending_date][0]
@@ -63,14 +67,12 @@ class Stock:
         return tsr
 
     def calc_TR(self):
-        tsr = self.calc_TSR()
-        return self.aum * tsr
+        return self.initial_aum * self.tsr
 
     def calc_aror(self):
-        tsr = self.calc_TSR()
         years = len(self.tick_data) / 250 
-        aror = (tsr + 1)**(1/years) - 1
-        return aror * self.aum
+        aror = (self.tsr + 1)**(1/years) - 1
+        return aror * self.initial_aum
 
     def calc_avg_aum(self):
         return np.mean([x[1] for x in list(self.tick_data.values())])
@@ -79,9 +81,7 @@ class Stock:
         return max([x[1] for x in list(self.tick_data.values())])
 
     def get_pnl(self):
-        fin = self.get_final_value()
-        pnl = (fin - self.aum)/self.aum * 100
-        return pnl
+        return (self.final_aum - self.initial_aum)/self.initial_aum * 100
 
 '''
     This is the main function containing...
@@ -102,7 +102,11 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
     # if plot == true
     #     plot...
-    print(stock.beginning_date, stock.ending_date, stock.numdays)
+    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.numdays, 
+    "\nTotal stock return:", stock.tsr, "\nTotal return: ", stock.tr, "\nAnnualized rate of return:", stock.aror, 
+    "\nInitial AUM:",stock.initial_aum, "\nFinal AUM",stock.final_aum, "\nAverage AUM:", stock.average_aum, 
+    "\nMaximum AUM:", stock.max_aum, "\nPnL:", stock.pnl, "\nAverage daily return of the portfolio:", 
+    "\nDaily Standard deviation of the return of the portfolio:", "\nDaily Sharpe Ratio of the portfolio:")
     return stock
 
 if __name__ == '__main__':
