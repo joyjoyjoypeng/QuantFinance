@@ -33,7 +33,7 @@ class Stock:
         self.average_aum = self.calc_avg_aum()
         self.max_aum = self.get_max_aum()
         self.pnl = self.get_pnl()
-    
+
     #need to change the for loop formatting
     def compute_mm(self, ticker, start_d, end_d, aum):
         data = yf.Ticker(ticker).history(period='max')
@@ -102,10 +102,10 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
     # if plot == true
     #     plot...
-    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.numdays, 
-    "\nTotal stock return:", stock.tsr, "\nTotal return: ", stock.tr, "\nAnnualized rate of return:", stock.aror, 
-    "\nInitial AUM:",stock.initial_aum, "\nFinal AUM",stock.final_aum, "\nAverage AUM:", stock.average_aum, 
-    "\nMaximum AUM:", stock.max_aum, "\nPnL:", stock.pnl, "\nAverage daily return of the portfolio:", 
+    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.numdays,
+    "\nTotal stock return:", stock.tsr, "\nTotal return: ", stock.tr, "\nAnnualized rate of return:", stock.aror,
+    "\nInitial AUM:",stock.initial_aum, "\nFinal AUM",stock.final_aum, "\nAverage AUM:", stock.average_aum,
+    "\nMaximum AUM:", stock.max_aum, "\nPnL:", stock.pnl, "\nAverage daily return of the portfolio:",
     "\nDaily Standard deviation of the return of the portfolio:", "\nDaily Sharpe Ratio of the portfolio:")
     return stock
 
