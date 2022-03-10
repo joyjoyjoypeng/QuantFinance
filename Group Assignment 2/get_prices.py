@@ -10,11 +10,8 @@ get_prices.py --ticker <xxx> –-b <YYYYMMDD> –-e <YYYYMMMDD> --initial_aum <y
 '''
 
 import argparse
-import csv
 from datetime import date
-from matplotlib.pyplot import get
 import numpy as np
-from sqlalchemy import true
 import yfinance as yf
 '''
 Class Stock
@@ -24,15 +21,8 @@ class Stock:
         self.tick_data=self.compute_mm(ticker, beginning_date, ending_date, aum)
         self.beginning_date=self.get_beginning_date()
         self.ending_date=self.get_end_date()
-        self.numdays=(ending_date-beginning_date).days
+        self.num_days = (ending_date-beginning_date).days
         self.initial_aum=aum
-        self.tsr = self.calc_TSR()
-        self.tr = self.calc_TR()
-        self.aror= self.calc_aror()
-        self.final_aum = self.get_final_value()
-        self.average_aum = self.calc_avg_aum()
-        self.max_aum = self.get_max_aum()
-        self.pnl = self.get_pnl()
 
     #need to change the for loop formatting
     def compute_mm(self, ticker, start_d, end_d, aum):
@@ -40,7 +30,7 @@ class Stock:
         mm={}
         for x in range(len(data['Close'])):
             y=date.fromisoformat(str(data['Close'].index[x]).split(' ')[0])
-            if y >= start_d and y <= end_d:
+            if (y-start_d).days>=0 and (y-end_d).days<=0:
                 if len(mm) == 0:
                     shares=aum // data['Close'][x]
                     invested=shares * data['Close'][x]
@@ -49,7 +39,7 @@ class Stock:
                 else:
                     mm[str(y)]=[data['Close'][x], shares * data['Close'][x], data['Dividends'][x]]
         return mm
-    
+
     def get_beginning_date(self):
         return list(self.tick_data.keys())[0]
 
@@ -58,7 +48,7 @@ class Stock:
 
     def get_final_value(self):
         return self.tick_data[self.ending_date][1]
-    
+
     def calc_TSR(self):
         initial_price = self.tick_data[self.beginning_date][0]
         final_price = self.tick_data[self.ending_date][0]
@@ -66,12 +56,12 @@ class Stock:
         tsr = (final_price-initial_price+divs)/initial_price
         return tsr
 
-    def calc_TR(self):
-        return self.initial_aum * self.tsr
+    def calc_TR(self, tsr):
+        return self.initial_aum * tsr
 
-    def calc_aror(self):
-        years = len(self.tick_data) / 250 
-        aror = (self.tsr + 1)**(1/years) - 1
+    def calc_aror(self,tsr):
+        years = len(self.tick_data) / 250
+        aror = (tsr + 1)**(1/years) - 1
         return aror * self.initial_aum
 
     def calc_avg_aum(self):
@@ -80,32 +70,43 @@ class Stock:
     def get_max_aum(self):
         return max([x[1] for x in list(self.tick_data.values())])
 
-    def get_pnl(self):
-        return (self.final_aum - self.initial_aum)/self.initial_aum * 100
+    def get_pnl(self,final_aum):
+        return (final_aum - self.initial_aum)/self.initial_aum * 100
 
 '''
     This is the main function containing...
 '''
 def main (ticker, b_date, e_date, initial_aum, plot=None):
+    if yf.Ticker(ticker).info['regularMarketPrice'] is None:
+        raise NameError("No stock ticker name found.")
     if initial_aum <= 0:
         raise ValueError('The initial asset under management is not a positive value')
-    beginning_date=date(int(str(b_date)[:4]), int(str(b_date)[4:6]), int(str(b_date)[6:]))
-    if e_date is None:
-        ending_date=date.today()
-    else:
-        ending_date=date(int(str(e_date)[:4]), int(str(e_date)[4:6]), int(str(e_date)[6:]))
-        if (ending_date-beginning_date).days<0:
-            raise ValueError('The ending date is before the beginning date')
-        if (ending_date-date.today()).days>0:
-            raise ValueError('The ending date is after today\'s date. No data available.')
-        
+    try:
+        beginning_date=date(int(str(b_date)[:4]), int(str(b_date)[4:6]), int(str(b_date)[6:]))
+        if e_date is None:
+            ending_date=date.today()
+        else:
+            ending_date=date(int(str(e_date)[:4]), int(str(e_date)[4:6]), int(str(e_date)[6:]))
+            if (ending_date-beginning_date).days<0:
+                raise ValueError('The ending date is before the beginning date')
+            if (ending_date-date.today()).days>0:
+                raise ValueError('The ending date is after today\'s date. No data available.')
+    except ValueError as v_e:
+        raise ValueError('You have entered an invalid date.') from v_e
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
+    tsr = stock.calc_TSR()
+    tr = stock.calc_TR(tsr)
+    aror= stock.calc_aror(tsr)
+    final_aum = stock.get_final_value()
+    average_aum = stock.calc_avg_aum()
+    max_aum = stock.get_max_aum()
+    pnl = stock.get_pnl(final_aum)
     # if plot == true
     #     plot...
-    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.numdays,
-    "\nTotal stock return:", stock.tsr, "\nTotal return: ", stock.tr, "\nAnnualized rate of return:", stock.aror,
-    "\nInitial AUM:",stock.initial_aum, "\nFinal AUM",stock.final_aum, "\nAverage AUM:", stock.average_aum,
-    "\nMaximum AUM:", stock.max_aum, "\nPnL:", stock.pnl, "\nAverage daily return of the portfolio:",
+    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.num_days,
+    "\nTotal stock return:", tsr, "\nTotal return: ", tr, "\nAnnualized rate of return:", aror,
+    "\nInitial AUM:",initial_aum, "\nFinal AUM", final_aum, "\nAverage AUM:", average_aum,
+    "\nMaximum AUM:", max_aum, "\nPnL:", pnl, "\nAverage daily return of the portfolio:",
     "\nDaily Standard deviation of the return of the portfolio:", "\nDaily Sharpe Ratio of the portfolio:")
     return stock
 
