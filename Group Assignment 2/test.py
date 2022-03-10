@@ -41,8 +41,8 @@ def test_stock_class():
     beginning_date = date(2021, 3, 1)
     ending_date = date(2022,3,6)
     stock = get_prices.Stock("MSFT", beginning_date, ending_date, 100000)
-    # tsr = stock.calc_TSR()
-    # tr = stock.calc_TR(tsr)
+    # tsr = stock.calc_tsr()
+    # tr = stock.calc_tr(tsr)
     # aror = stock.calc_aror(tsr)
     # avg_aum = stock.calc_avg_aum()
     # max_aum = stock.get_max_aum()
@@ -74,8 +74,8 @@ def test_main_return():
     Returns:
     '''
     stock_main = get_prices.main("MSFT", 20210301, 20220306, 100000)
-    # tsr_main = stock_main.calc_TSR()
-    # tr_main = stock_main.calc_TR(tsr)
+    # tsr_main = stock_main.calc_tsr()
+    # tr_main = stock_main.calc_tr(tsr)
     # aror_main = stock_main.calc_aror(tsr)
     # avg_aum_main = stock_main.calc_avg_aum()
     # max_aum_main = stock_main.get_max_aum()
@@ -85,8 +85,8 @@ def test_main_return():
     # sharpe_ratio_main = stock_main.
 
     stock_class = get_prices.Stock("MSFT", date(2021, 3, 1), date(2022,3,6), 100000)
-    # tsr_class = stock_class.calc_TSR()
-    # tr_class = stock_class.calc_TR(tsr)
+    # tsr_class = stock_class.calc_tsr()
+    # tr_class = stock_class.calc_tr(tsr)
     # aror_class = stock_class.calc_aror(tsr)
     # avg_aum_class = stock_class.calc_avg_aum()
     # max_aum_class = stock_class.get_max_aum()
@@ -120,8 +120,8 @@ def test_main_no_end_date():
     Returns:
     '''
     stock_main = get_prices.main("MSFT", 20220101, None, 100000)
-    # tsr_main = stock_main.calc_TSR()
-    # tr_main = stock_main.calc_TR(tsr)
+    # tsr_main = stock_main.calc_tsr()
+    # tr_main = stock_main.calc_tr(tsr)
     # aror_main = stock_main.calc_aror(tsr)
     # avg_aum_main = stock_main.calc_avg_aum()
     # max_aum_main = stock_main.get_max_aum()
@@ -131,8 +131,8 @@ def test_main_no_end_date():
     # sharpe_ratio_main = stock_main.
 
     stock_today = get_prices.Stock("MSFT", date(2022, 1, 1), date.today() ,100000)
-    # tsr_today = stock_today.calc_TSR()
-    # tr_today = stock_today.calc_TR(tsr)
+    # tsr_today = stock_today.calc_tsr()
+    # tr_today = stock_today.calc_tr(tsr)
     # aror_today = stock_today.calc_aror(tsr)
     # avg_aum_today = stock_today.calc_avg_aum()
     # max_aum_today = stock_today.get_max_aum()

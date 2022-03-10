@@ -13,11 +13,25 @@ import argparse
 from datetime import date
 import numpy as np
 import yfinance as yf
-'''
-Class Stock
-'''
+
 class Stock:
+    '''
+        This is the class function for Stock objects
+
+        Inputs:
+
+
+        Returns:
+    '''
     def __init__(self, ticker, beginning_date, ending_date, aum):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         self.tick_data=self.compute_mm(ticker, beginning_date, ending_date, aum)
         self.beginning_date=self.get_beginning_date()
         self.ending_date=self.get_end_date()
@@ -26,6 +40,14 @@ class Stock:
 
     #need to change the for loop formatting
     def compute_mm(self, ticker, start_d, end_d, aum):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         data = yf.Ticker(ticker).history(period='max')
         mm={}
         for x in range(len(data['Close'])):
@@ -34,49 +56,126 @@ class Stock:
                 if len(mm) == 0:
                     shares=aum // data['Close'][x]
                     invested=shares * data['Close'][x]
-                    remainder=aum-invested
+                    # remainder=aum-invested
                     mm[str(y)]=[data['Close'][x], invested, data['Dividends'][x]]
                 else:
                     mm[str(y)]=[data['Close'][x], shares * data['Close'][x], data['Dividends'][x]]
         return mm
 
     def get_beginning_date(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return list(self.tick_data.keys())[0]
 
     def get_end_date(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return list(self.tick_data.keys())[-1]
 
     def get_final_value(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return self.tick_data[self.ending_date][1]
 
-    def calc_TSR(self):
+    def calc_tsr(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         initial_price = self.tick_data[self.beginning_date][0]
         final_price = self.tick_data[self.ending_date][0]
         divs = sum([x[2] for x in list(self.tick_data.values())])
         tsr = (final_price-initial_price+divs)/initial_price
         return tsr
 
-    def calc_TR(self, tsr):
+    def calc_tr(self, tsr):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return self.initial_aum * tsr
 
     def calc_aror(self,tsr):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         years = len(self.tick_data) / 250
         aror = (tsr + 1)**(1/years) - 1
         return aror * self.initial_aum
 
     def calc_avg_aum(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return np.mean([x[1] for x in list(self.tick_data.values())])
 
     def get_max_aum(self):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return max([x[1] for x in list(self.tick_data.values())])
 
     def get_pnl(self,final_aum):
+        '''
+        This function
+
+        Inputs:
+
+
+        Returns:
+        '''
         return (final_aum - self.initial_aum)/self.initial_aum * 100
 
-'''
-    This is the main function containing...
-'''
+
 def main (ticker, b_date, e_date, initial_aum, plot=None):
+    '''
+    This is the main function for initializing, computing, and retrieving the final output.
+
+    Inputs:
+
+    Returns:
+    '''
     if yf.Ticker(ticker).info['regularMarketPrice'] is None:
         raise NameError("No stock ticker name found.")
     if initial_aum <= 0:
@@ -94,8 +193,8 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
     except ValueError as v_e:
         raise ValueError('You have entered an invalid date.') from v_e
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
-    tsr = stock.calc_TSR()
-    tr = stock.calc_TR(tsr)
+    tsr = stock.calc_tsr()
+    total_return = stock.calc_tr(tsr)
     aror= stock.calc_aror(tsr)
     final_aum = stock.get_final_value()
     average_aum = stock.calc_avg_aum()
@@ -103,11 +202,14 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
     pnl = stock.get_pnl(final_aum)
     # if plot == true
     #     plot...
-    print(stock.beginning_date,"\nEnding date:", stock.ending_date, "\nNumber of days:", stock.num_days,
-    "\nTotal stock return:", tsr, "\nTotal return: ", tr, "\nAnnualized rate of return:", aror,
-    "\nInitial AUM:",initial_aum, "\nFinal AUM", final_aum, "\nAverage AUM:", average_aum,
-    "\nMaximum AUM:", max_aum, "\nPnL:", pnl, "\nAverage daily return of the portfolio:",
-    "\nDaily Standard deviation of the return of the portfolio:", "\nDaily Sharpe Ratio of the portfolio:")
+    print(stock.beginning_date,"\nEnding date:", stock.ending_date,
+    "\nNumber of days:", stock.num_days,"\nTotal stock return:", tsr,
+    "\nTotal return: ", total_return, "\nAnnualized rate of return:", aror,
+    "\nInitial AUM:",initial_aum, "\nFinal AUM", final_aum,
+    "\nAverage AUM:", average_aum,"\nMaximum AUM:", max_aum,
+    "\nPnL:", pnl, "\nAverage daily return of the portfolio:",
+    "\nDaily Standard deviation of the return of the portfolio:",
+    "\nDaily Sharpe Ratio of the portfolio:")
     return stock
 
 if __name__ == '__main__':
@@ -116,6 +218,6 @@ if __name__ == '__main__':
     parser.add_argument('--b',type=int, required=True, help="the beginning date of the period")
     parser.add_argument('--e', type=int, help="the ending date of the period")
     parser.add_argument('--initial_aum', type=int, required=True,help="number of k-folds")
-    parser.add_argument('--plot', action='store_true', help="a plot of the input and prediction data")
+    parser.add_argument('--plot', action='store_true', help="a plot of the the daily AUM")
     args=parser.parse_args()
     main(args.ticker, args.b, args.e, args.initial_aum, args.plot)
