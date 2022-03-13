@@ -18,15 +18,57 @@ import matplotlib.pyplot as plt
 from termcolor import colored
 
 class Stock:
-    '''
-        This is the class function for Stock objects
+    """
+    A class used to represent the stock
+    ...
 
-        Inputs:
-        (wait joy idk whats supposed to go here i m sorry pls help)
+    Attributes
+    ----------
+    tick_data : dictionary
+        a formatted dictionary containing key information about the stock portfolio
+        per trading day
+    beginning_date : date
+        the first trading day
+    ending_date : date
+        the final trading day
+    initial_aum : int
+        the initial AUM that was invested into the stock
+    ticker : string
+        the 4 character name of the ticker
 
-        Returns:
-        Everything.
-    '''
+    Methods 
+    -------
+    compute_mm(ticker, start_d, end_d, aum)
+        generates the large dictionary of key information
+    get_beginning_date()
+        gets the first trading date
+    get_end_date()
+        gets the last trading date
+    calc_days()
+        calculates the number of calendar days in the trading period
+    get_final_value()
+        gets the final value of the AUM
+    calc_tsr()
+        calculates the total stock return taking dividends into account
+    calc_tr()
+        calculates the total return of the portfolio
+    calc_aror(tsr)
+        calculates the annualized rate of return of the stock
+    calc_avg_aum()
+        calculates the average value of the AUM
+    get_max_aum()
+        gets the maximum value of the AUM
+    get_pnl()
+        gets the profit and loss of the stock given the AUM
+    get_adr()
+        gets the average daily return of the stock
+    get_std()
+        gets the standard deviation of the daily stock return
+    get_sharpe()
+        gets the Sharpe Ratio of the stock
+    get_plot()
+        generates the plot of the value of the AUM across the trading period
+    """
     def __init__(self, ticker, beginning_date, ending_date, aum):
         '''
         This function initializes the inputs given by the user and stores them within the class
@@ -331,7 +373,6 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
 
     Returns:
     stock (class): The module containing all the relevant information about the stock.
-        
     '''
     if yf.Ticker(ticker).info['regularMarketPrice'] is None:
         raise NameError("No stock ticker name found.")
