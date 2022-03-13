@@ -13,7 +13,6 @@ import argparse
 from datetime import date
 import numpy as np
 import yfinance as yf
-from datetime import date
 import pandas as pd
 import matplotlib.pyplot as plt
 from termcolor import colored
@@ -65,9 +64,9 @@ class Stock:
         aum (integer): The intial amount of assets that are invested in the stock
 
         Returns:
-        actual_data (dictionary): Contains all the relevant data for each of the dates within
-        the period in the following order: [closing price, updated AUM value, dividends, daily
-        trading rate].
+        actual_data (dictionary): The large dictionary. Contains all the relevant data for each
+        of the dates within the period in the following order: [closing price, updated AUM value,
+        dividends, daily trading rate].
         '''
         ticker_data = yf.Ticker(ticker).history(period='max')
         actual_data = {}
@@ -76,45 +75,49 @@ class Stock:
             if (cur_d-start_d).days>=0 and (cur_d-end_d).days<=0:
                 if len(actual_data) == 0:
                     shares=aum / close_value
-                    actual_data[str(cur_d)]=[close_value, aum, 
+                    actual_data[str(cur_d)]=[close_value, aum,
                     ticker_data['Dividends'][close_index], 0]
                 else:
                     daily_trading_rate = (close_value + ticker_data['Dividends'][close_index]) /\
                     ticker_data['Close'][close_index-1] - 1
-                    actual_data[str(cur_d)]=[close_value, shares * close_value, 
+                    actual_data[str(cur_d)]=[close_value, shares * close_value,
                     ticker_data['Dividends'][close_index], daily_trading_rate]
         return actual_data
 
     def get_beginning_date(self):
         '''
-        This function
+        This function gets the first date from the large dictionary.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        date (string): The first trading date.
         '''
         return list(self.tick_data.keys())[0]
 
     def get_end_date(self):
         '''
-        This function
+        This function gets the last date from the large dictionary.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        date (string): The last trading date.
         '''
         return list(self.tick_data.keys())[-1]
 
     def calc_days(self):
         '''
-        This function
+        This function computes the number of calendar days that have passed during the period
+        specified.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        days (int): Number of calendar days between the first and last trading days.
         '''
         num_days = date.fromisoformat(self.ending_date) - date.fromisoformat(self.beginning_date)
         return num_days.days
@@ -122,23 +125,30 @@ class Stock:
 
     def get_final_value(self):
         '''
-        This function
+        This function returns the final value of the AUM.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        AUM (float): Final value of the AUM, calculated using the number of initial shares bought
+        multiplied by the closing price on the final trading day.
         '''
         return self.tick_data[self.ending_date][1]
 
     def calc_tsr(self):
         '''
-        This function
+        This function calculates the total stock return using data from the large dictionary.
+        This value tells the user how lucrative the stock has been taking into account the
+        dividents recieved throughout the specified period.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        total_stock_return (float): Calculated by taking the final closing price of the stock
+        summed with the dividends received throughout the period, and dividing the obtained value
+        by the intial stock closing price, and finally subtracting the result by 1.
         '''
         initial_price = self.tick_data[self.beginning_date][0]
         final_price = self.tick_data[self.ending_date][0]
@@ -148,12 +158,19 @@ class Stock:
 
     def calc_tr(self):
         '''
-        This function
+        This function calculates the total return using data from the large dictionary.
+        This value tells the user how lucrative their portfolio has been taking into account
+        the starting and final values of their AUM. If more stocks were included in the users
+        portfolio or if fractional stocks were not possible, this value would be different
+        from the Profit and Loss value of the stock that is also generated later on.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        total_return (float): Calculated by taking the final value of the AUM and subtracting
+        the initial value of the AUM, and finally dividing the obtained value by the initial
+        value of the AUM again.
         '''
         initial_aum = self.initial_aum
         end_aum = self.tick_data[self.ending_date][1]
@@ -162,12 +179,18 @@ class Stock:
 
     def calc_aror(self,tsr):
         '''
-        This function
+        This function calcluates the annualized rate of return of the AUM, assuming 250 trading
+        days in a year. This value is useful in informing the user on their projected returns if
+        the stock were to continue performing in a similar trend to how it has been in the
+        specificed period.
 
         Inputs:
-
+        tsr (float): The total stock return of the stock as calculated earlier.
 
         Returns:
+        annualized rate of return (float): Calculated by taking the time that has passed as a
+        percentage of a hypothetical trading year and multiplying the result by the total stock
+        return so far.
         '''
         years = len(self.tick_data) / 250
         aror = (tsr + 1)**(1/years) - 1
@@ -175,34 +198,41 @@ class Stock:
 
     def calc_avg_aum(self):
         '''
-        This function
+        This function calculates the average value of the AUM throughout the period.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        average AUM (float): The mean value of the AUM.
         '''
         return np.mean([x[1] for x in list(self.tick_data.values())])
 
     def get_max_aum(self):
         '''
-        This function
+        This function calculates the maximum value of the AUM throughout the period.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        max AUM (float): The maximum value of the AUM.
         '''
         return max([x[1] for x in list(self.tick_data.values())])
 
     def get_pnl(self):
         '''
-        This function
+        This function lets the user know how much profit or loss has been made throughout
+        their investment period. The formula used is identical to the total_return function
+        earlier since the portfolio only consists of 1 stock with fractional shares.
 
         Inputs:
-
+        --None, except for the module itself--
 
         Returns:
+        profit_loss (float): Calculated by taking the final value of the AUM and subtracting
+        the initial value of the AUM, and finally dividing the obtained value by the initial
+        value of the AUM again.
         '''
         initial_aum = self.initial_aum
         end_aum = self.tick_data[self.ending_date][1]
@@ -211,22 +241,62 @@ class Stock:
 
     def get_adr(self, tsr):
         '''
-        This function
+        This function calculates the average daily return of the stock.
 
         Inputs:
-
+        tsr (float): The total stock return of the stock as calculated earlier.
 
         Returns:
+        adr (float): Calculated by taking the total stock return and dividing the value by the
+        total number of trading days.
         '''
         return tsr / len(self.tick_data)
 
     def get_std(self):
+        '''
+        This function calculates the standard deviation of the return of the stock across the
+        trading period.
+
+        Inputs:
+        --None, except for the module itself--
+
+        Returns:
+        std (float): The large dictionary contains the stock return per day, which is now used
+        to calculate the standard deviation.
+        '''
         return np.std([x[3] for x in list(self.tick_data.values())])
 
     def get_sharpe(self, adr, std, risk_free = 0.0001):
+        '''
+        This function calculates the Sharpe Ratio of the stock across the trading period. This
+        is one of the most useful statistics as it informs the user of the volatility of the
+        stock, acting as a good signal for any further action that needs to be taken.
+
+        Inputs:
+        adr (float): The average daily return of the stock as calculated earlier.
+        std (float): The standard deviation of the daily stock return as calculated earlier.
+        risk_free (float): A value of 0.01% is assumed and can be modified if necessary.
+
+        Returns:
+        Sharpe Ratio (float): Calculated by taking the average daily return, subtracting the risk
+        free rate and dividing the result by the standard deviation of the daily stock return
+        '''
         return (adr-risk_free)/std
 
     def get_plot(self):
+        '''
+        This function generates the plot of the value of the AUM across the trading period if
+        requested by the user.
+
+        Inputs:
+        --None, except for the module itself--
+
+        Returns:
+        the plot (plot): The plot is shown to the user directly, and is also saved to their
+        local drive. If the user wishes to run the script again using a different ticker, the new
+        plot will not override the previous one as it will be saved under a different name.
+        '''
+
         plt.style.use("fivethirtyeight")
         plt.figure(figsize=(15, 15))
         plt.xlabel("Date")
@@ -241,15 +311,27 @@ class Stock:
         plt.plot(data_frame[1])
         plt.xticks(rotation=45)
         plt.savefig("Plot of AUM for " + self.ticker_name + ".jpg")
+        plt.show()
 
 
 def main (ticker, b_date, e_date, initial_aum, plot=None):
     '''
     This is the main function for initializing, computing, and retrieving the final output.
+    The printed outputs are also generated here, color coded according to their negative/positive
+    values.
 
     Inputs:
+    ticker (string): 4 character ticker name, as provided by the user
+    b_date (string): The date the initial AUM was invested
+    e_date (string): The final date to be used for calculations. If no ending date is
+    provided by the user, the script takes the latest possible date.
+    initial_aum (integer): The intial amount of assets that are invested in the stock
+    plot (bool): Whether a plot should be generated showing the value of the AUM across the
+    trading period
 
     Returns:
+    stock (class): The module containing all the relevant information about the stock.
+        
     '''
     if yf.Ticker(ticker).info['regularMarketPrice'] is None:
         raise NameError("No stock ticker name found.")
@@ -266,7 +348,7 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
             if (ending_date-date.today()).days>0:
                 raise ValueError('The ending date is after today\'s date. No data available.')
     except ValueError as v_e:
-        raise ValueError('You have entered an invalid date.') from v_e 
+        raise ValueError('You have entered an invalid date.') from v_e
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
     days = stock.calc_days()
     tsr = stock.calc_tsr()
@@ -279,7 +361,7 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
     adr = stock.get_adr(tsr)
     std = stock.get_std()
     sharpe = stock.get_sharpe(adr, std)
-    if plot == True:
+    if np.equal(plot, True):
         stock.get_plot()
     numbers = ["(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "(9)", "(10)", "(11)",
     "(12)", "(13)", "(14)"]

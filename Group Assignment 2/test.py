@@ -32,126 +32,91 @@ def test_main_argument():
 
 def test_stock_class():
     '''
-    This function tests whether the Stock() class stores, computer, and retrieves data correctly
-
-    Inputs:
-
-    Returns:
+    This function tests whether the Stock() class stores, computer, and retrieves data correctly.
     '''
     beginning_date = date(2021, 3, 1)
     ending_date = date(2022,3,6)
-    stock = get_prices.Stock("MSFT", beginning_date, ending_date, 100000)
-    # tsr = stock.calc_tsr()
-    # tr = stock.calc_tr(tsr)
-    # aror = stock.calc_aror(tsr)
-    # avg_aum = stock.calc_avg_aum()
-    # max_aum = stock.get_max_aum()
-    # pnl = stock.get_pnl(100000)
-    # avg_return = stock.
-    # sd = stock.
-    # sharpe_ratio = stock.
+    stock = get_prices.Stock("MSFT", beginning_date, ending_date, 10000)
+    assert stock.ticker_name == "MSFT"
     assert stock.beginning_date == '2021-03-01'
     assert stock.ending_date == '2022-03-04'
-    assert stock.initial_aum == 100000
-    assert stock.num_days == 370
-    # assert tsr ==
-    # assert tr ==
-    # assert aror ==
-    # assert avg_aum ==
-    # assert max_aum ==
-    # assert pnl ==
-    # assert avg_dreturn ==
-    # assert sd ==
-    # assert sharpe_ratio ==
+    assert stock.calc_days() == 368
+    tsr = stock.calc_tsr()
+    assert tsr == 0.22854133920617614
+    assert stock.calc_tr() == 0.22617241425384327
+    assert stock.calc_aror(tsr) == 2216.731631259674
+    assert stock.initial_aum == 10000
+    assert stock.get_final_value() == 12261.724142538433
+    assert stock.calc_avg_aum() == 12140.62911689067
+    assert stock.get_max_aum() == 14514.317958819227
+    assert stock.get_pnl() == 0.22617241425384327
+    adr = stock.get_adr(tsr)
+    assert adr == 0.0008892659113080783
+    std = stock.get_std()
+    assert std == 0.01432884720813962
+    sharpe = stock.get_sharpe(adr, std)
+    assert sharpe == 0.055082303540771184
 
 def test_main_return():
     '''
     This function tests whether the main() class stores, computer, and retrieves data correctly
-    by comparing against the output of the Stock() class
-
-    Inputs:
-
-    Returns:
+    by comparing against the output of the Stock() class.
     '''
-    stock_main = get_prices.main("MSFT", 20210301, 20220306, 100000)
-    # tsr_main = stock_main.calc_tsr()
-    # tr_main = stock_main.calc_tr(tsr)
-    # aror_main = stock_main.calc_aror(tsr)
-    # avg_aum_main = stock_main.calc_avg_aum()
-    # max_aum_main = stock_main.get_max_aum()
-    # pnl_main = stock_main.get_pnl(100000)
-    # avg_return_main = stock_main.
-    # sd_main = stock_main.
-    # sharpe_ratio_main = stock_main.
-
-    stock_class = get_prices.Stock("MSFT", date(2021, 3, 1), date(2022,3,6), 100000)
-    # tsr_class = stock_class.calc_tsr()
-    # tr_class = stock_class.calc_tr(tsr)
-    # aror_class = stock_class.calc_aror(tsr)
-    # avg_aum_class = stock_class.calc_avg_aum()
-    # max_aum_class = stock_class.get_max_aum()
-    # pnl_class = stock_class.get_pnl(100000)
-    # avg_return_class = stock_class.
-    # sd_class = stock_class.
-    # sharpe_ratio_class = stock_class.
-
+    stock_main = get_prices.main("MSFT", 20210301, 20220306, 10000)
+    stock_class = get_prices.Stock("MSFT", date(2021, 3, 1), date(2022,3,6), 10000)
+    assert stock_main.ticker_name == stock_class.ticker_name
     assert stock_main.beginning_date == stock_class.beginning_date
     assert stock_main.ending_date == stock_class.ending_date
     assert stock_main.initial_aum == stock_class.initial_aum
-    assert stock_main.num_days == stock_class.num_days
-
-    # assert tsr_main == tsr_class
-    # assert tr_main == tr_class
-    # assert aror_main == aror_class
-    # assert avg_aum_main == avg_aum_class
-    # assert max_aum_main == max_aum_class
-    # assert pnl_main == pnl_class
-    # assert avg_return_main == avg_return_class
-    # assert sd_main == sd_class
-    # assert sharpe_ratio_main == sharpe_ratio_class
+    assert stock_main.calc_days() == stock_class.calc_days()
+    tsr_main = stock_main.calc_tsr()
+    tsr_class = stock_class.calc_tsr()
+    assert tsr_main == tsr_class
+    assert stock_main.calc_tr() == stock_class.calc_tr()
+    assert stock_main.calc_aror(tsr_main) == stock_class.calc_aror(tsr_class)
+    assert stock_main.initial_aum == stock_class.initial_aum
+    assert stock_main.get_final_value() == stock_class.get_final_value()
+    assert stock_main.calc_avg_aum() == stock_class.calc_avg_aum()
+    assert stock_main.get_max_aum() == stock_class.get_max_aum()
+    assert stock_main.get_pnl() == stock_class.get_pnl()
+    adr_main = stock_main.get_adr(tsr_main)
+    adr_class = stock_class.get_adr(tsr_class)
+    assert adr_main == adr_class
+    std_main = stock_main.get_std()
+    std_class = stock_class.get_std()
+    assert std_main == std_class
+    sharpe_main = stock_main.get_sharpe(adr_main, std_main)
+    sharpe_class = stock_class.get_sharpe(adr_class, std_class)
+    assert sharpe_main == sharpe_class
 
 def test_main_no_end_date():
     '''
     This function tests whether the main() class stores, computer, and retrieves data correctly
     given that the optional ending date argument is not present
-
-    Inputs:
-
-    Returns:
     '''
-    stock_main = get_prices.main("MSFT", 20220101, None, 100000)
-    # tsr_main = stock_main.calc_tsr()
-    # tr_main = stock_main.calc_tr(tsr)
-    # aror_main = stock_main.calc_aror(tsr)
-    # avg_aum_main = stock_main.calc_avg_aum()
-    # max_aum_main = stock_main.get_max_aum()
-    # pnl_main = stock_main.get_pnl(100000)
-    # avg_return_main = stock_main.
-    # sd_main = stock_main.
-    # sharpe_ratio_main = stock_main.
-
-    stock_today = get_prices.Stock("MSFT", date(2022, 1, 1), date.today() ,100000)
-    # tsr_today = stock_today.calc_tsr()
-    # tr_today = stock_today.calc_tr(tsr)
-    # aror_today = stock_today.calc_aror(tsr)
-    # avg_aum_today = stock_today.calc_avg_aum()
-    # max_aum_today = stock_today.get_max_aum()
-    # pnl_today = stock_today.get_pnl(100000)
-    # avg_return_today = stock_today.
-    # sd_today = stock_today.
-    # sharpe_ratio_today = stock_today.
-
+    stock_main = get_prices.main("MSFT", 20220101, None, 10000)
+    stock_today = get_prices.Stock("MSFT", date(2022, 1, 1), date.today() ,10000)
+    assert stock_main.ticker_name == stock_today.ticker_name
     assert stock_main.beginning_date == stock_today.beginning_date
     assert stock_main.ending_date == stock_today.ending_date
     assert stock_main.initial_aum == stock_today.initial_aum
-    assert stock_main.num_days == stock_today.num_days
-
-    # assert tsr_main == tsr_today
-    # assert tr_main == tr_today
-    # assert aror_main == aror_today
-    # assert avg_aum_main == avg_aum_today
-    # assert max_aum_main == max_aum_today
-    # assert pnl_main == pnl_today
-    # assert avg_return_main == avg_return_today
-    # assert sd_main == sd_today
-    # assert sharpe_ratio_main == sharpe_ratio_today
+    assert stock_main.calc_days() == stock_today.calc_days()
+    tsr_main = stock_main.calc_tsr()
+    tsr_today = stock_today.calc_tsr()
+    assert tsr_main == tsr_today
+    assert stock_main.calc_tr() == stock_today.calc_tr()
+    assert stock_main.calc_aror(tsr_main) == stock_today.calc_aror(tsr_today)
+    assert stock_main.initial_aum == stock_today.initial_aum
+    assert stock_main.get_final_value() == stock_today.get_final_value()
+    assert stock_main.calc_avg_aum() == stock_today.calc_avg_aum()
+    assert stock_main.get_max_aum() == stock_today.get_max_aum()
+    assert stock_main.get_pnl() == stock_today.get_pnl()
+    adr_main = stock_main.get_adr(tsr_main)
+    adr_today = stock_today.get_adr(tsr_today)
+    assert adr_main == adr_today
+    std_main = stock_main.get_std()
+    std_today = stock_today.get_std()
+    assert std_main == std_today
+    sharpe_main = stock_main.get_sharpe(adr_main, std_main)
+    sharpe_today = stock_today.get_sharpe(adr_today, std_today)
+    assert sharpe_main == sharpe_today
