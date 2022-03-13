@@ -231,12 +231,12 @@ class Stock:
 
         Returns:
         annualized rate of return (float): Calculated by taking the time that has passed as a
-        percentage of a hypothetical trading year and multiplying the result by the total stock
-        return so far.
+        percentage of a hypothetical trading year and raising the result as the power of the 
+        total stock return subtracted by 1
         '''
         years = len(self.tick_data) / 250
         aror = (tsr + 1)**(1/years) - 1
-        return aror * self.initial_aum
+        return aror
 
     def calc_avg_aum(self):
         '''
@@ -390,6 +390,7 @@ def main (ticker, b_date, e_date, initial_aum, plot=None):
                 raise ValueError('The ending date is after today\'s date. No data available.')
     except ValueError as v_e:
         raise ValueError('You have entered an invalid date.') from v_e
+    print("Still generating...")
     stock = Stock(ticker, beginning_date, ending_date, initial_aum)
     days = stock.calc_days()
     tsr = stock.calc_tsr()

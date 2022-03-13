@@ -34,7 +34,7 @@ def test_stock_class():
     '''
     This function tests whether the Stock() class stores, computer, and retrieves data correctly.
     '''
-    beginning_date = date(2021, 3, 1)
+    beginning_date = date(2021,3,1)
     ending_date = date(2022,3,6)
     stock = get_prices.Stock("MSFT", beginning_date, ending_date, 10000)
     assert stock.ticker_name == "MSFT"
@@ -44,7 +44,7 @@ def test_stock_class():
     tsr = stock.calc_tsr()
     assert tsr == 0.22854133920617614
     assert stock.calc_tr() == 0.22617241425384327
-    assert stock.calc_aror(tsr) == 2216.731631259674
+    assert stock.calc_aror(tsr) == 0.2216731631259674
     assert stock.initial_aum == 10000
     assert stock.get_final_value() == 12261.724142538433
     assert stock.calc_avg_aum() == 12140.62911689067
