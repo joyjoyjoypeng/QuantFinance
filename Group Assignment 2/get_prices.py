@@ -36,7 +36,7 @@ class Stock:
     ticker : string
         the 4 character name of the ticker
 
-    Methods 
+    Methods
     -------
     compute_mm(ticker, start_d, end_d, aum)
         generates the large dictionary of key information
@@ -231,7 +231,7 @@ class Stock:
 
         Returns:
         annualized rate of return (float): Calculated by taking the time that has passed as a
-        percentage of a hypothetical trading year and raising the result as the power of the 
+        percentage of a hypothetical trading year and raising the result as the power of the
         total stock return subtracted by 1
         '''
         years = len(self.tick_data) / 250
