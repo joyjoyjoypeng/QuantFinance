@@ -18,6 +18,11 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
+import warnings
+warnings.filterwarnings('ignore')
+
 class Ticker:
     """
     A class used to contain information about all the stocks that are part of the user's
@@ -28,15 +33,22 @@ class Ticker:
     giant : dictionary
         A giant dictionary that contains all the information about each stock for each trading
         day within the specified period, such as its closing price, dividends
-    dates : dictionary
+    dates : list
         The dates on which trades are made, i.e. the last trading days of each month within
         the specified period
+    predates : list
+        Same as dates, but also contains the last day of the trading month before the start
+        date so that the linear model can be fitted for the first day of buying stocks
     strnum :
         The number of stocks that need to be picked from the portfolio each time, obtained
         using the top_pct value provided by the user
     strat : int
         The strategy that will be employed in the backtesting, specifying the stocks that
         should be bought on each trading day
+    tvals : list
+        The t-values of the coefficients of each stock's final linear model
+    coefs : list
+        The coefficients of each stock's final linear model for each strategy's returns 
     trading_data : dictionary
         A slightly smaller dictionary that only contains data for the days on which the
         user has ownership of the stock based on the trading strategy, and contains data
@@ -61,10 +73,12 @@ class Ticker:
     def __init__(self, tickers_list, beginning_date, ending_date, aum, strategy1_type,\
         days1, strategy2_type, days2, top_pct):
         self.giant=self.compute_giant_date(tickers_list, beginning_date, ending_date)[0]
-        self.dates=self.compute_giant_date(tickers_list, beginning_date, ending_date)[1]
+        self.predates=self.compute_giant_date(tickers_list, beginning_date, ending_date)[1]
+        self.dates=self.predates[1:]
         self.strnum = ceil(len(tickers_list) * (top_pct/100))
         print('Computing strategy...')
-        self.strat=self.compute_strategy(strategy1_type, days1, strategy2_type, days2)
+        (self.strat, self.tvals, self.coefs)=self.compute_strategy(\
+            strategy1_type, days1, strategy2_type, days2)
         print('Generating returns...')
         self.trading_data=self.compute_trading_data(tickers_list,beginning_date,ending_date,aum)[0]
     def compute_giant_date(self, tickers_list, beginning_date, ending_date):
@@ -82,7 +96,8 @@ class Ticker:
 
         Returns:
         giant (dictionary): contains all the information of each stock in the specified period
-        dates (list): contains all the trading days
+        dates (list): contains all the trading days + the last trading day of the month before
+        the start date
         '''
         giant = {}
         dates = []
@@ -100,42 +115,96 @@ class Ticker:
                     elif comp.month != cur_date.month:
                         if comp >= beginning_date and comp <= ending_date:
                             dates.append(comp)
+                        elif comp.month + 1 == beginning_date.month:
+                            dates.append(comp)
+                        elif comp.year + 1 == beginning_date.year and \
+                            comp.month - 11 == beginning_date.month:
+                            dates.append(comp)
                     comp = cur_date
         return (giant, dates)
     def compute_strategy(self, strategy1_type, days1, strategy2_type, days2):
         '''
-        This function...
+        This function performs linear regression to calculate which stocks should be bought
+        on each trading datafter weighing the returns from utilizing each strategy provided
+        by the user
 
         Inputs:
-        strategy_type (str): the backtesting strategy chosen by the user
-        days (int): the numbers of trading days used to compute strategy-related returns
+        strategy1_type (str): the first backtesting strategy chosen by the user
+        strategy2_type (str): same as above, but the second one
+        days1 (int): the first numbers of trading days used to compute strategy-related returns
+        days2 (int): same as above, but the second one
 
         Returns:
         strat_ticks (dictionary): contains the list of stocks that need to be bought
         on each trading day
         '''
         strat = {}
+        final_prices = {}
+        linear_xvals = {}
+        linear_yvals = {}
+        linear_tvals = {}
+        linear_coefs = {}
 
-        for trading_day in self.dates:
-            strat[trading_day] = {}
+        for trading_day in self.predates:    
             for tick, data in self.giant.items():
-                for row in range(len(data['Close'])):
-                    cur_date = data['Close'].index[row].date()
+                for (row_ind, row_val) in enumerate(data['Close']):
+                    cur_date = data['Close'].index[row_ind].date()
                     if cur_date == trading_day:
-                        if strategy_type == 'R':
-                            endp = data['Close'][row]
-                            sttp = data['Close'][row-days]
-                            divp = 0
-                            for day in range(row-days, row+1):
-                                divp += data['Dividends'][day]
+                        final_price = row_val
+                        if strategy1_type == 'R':
+                            endp_1 = row_val
+                            sttp_1 = data['Close'][row_ind-days1]
+                            divp_1 = 0
+                            for day in range(row_ind-days1, row_ind+1):
+                                divp_1 += data['Dividends'][day]
                         else:
-                            endp = data['Close'][row-20]
-                            sttp = data['Close'][row-20-days]
+                            endp_1 = data['Close'][row_ind-20]
+                            sttp_1 = data['Close'][row_ind-20-days1]
+                            divp_1 = 0
+                            for day in range(row_ind-20-days1, row_ind-19):
+                                divp_1 += data['Dividends'][day]
+                        ret_1 = (endp_1 - sttp_1 + divp_1) / sttp_1
+                        if strategy2_type == 'R':
+                            endp_2 = row_val
+                            sttp_2 = data['Close'][row_ind-days2]
+                            divp_2 = 0
+                            for day in range(row_ind-days2, row_ind+1):
+                                divp_2 += data['Dividends'][day]
+                        else:
+                            endp_2 = data['Close'][row_ind-20]
+                            sttp_2 = data['Close'][row_ind-20-days2]
+                            divp_2 = 0
+                            for day in range(row_ind-20-days2, row_ind-19):
+                                divp_2 += data['Dividends'][day]
+                        ret_2 = (endp_2 - sttp_2 + divp_2) / sttp_2
+                        if tick in linear_xvals:
+                            if trading_day not in strat:
+                                strat[trading_day] = {}
+                            endp = row_val
+                            sttp = final_prices[tick][len(linear_yvals[tick])][0]
                             divp = 0
-                            for day in range(row-20-days, row-19):
+                            for day in range(final_prices[tick]\
+                                [len(linear_yvals[tick])][1], row_ind+1):
                                 divp += data['Dividends'][day]
-                        ret = (endp - sttp + divp) / sttp
-                        strat[trading_day][tick] = ret
+                            ret = (endp - sttp + divp) / sttp
+                            linear_yvals[tick].append(ret)
+                            linear_model = LinearRegression().fit(\
+                                linear_xvals[tick], linear_yvals[tick])
+                            pred = linear_model.predict([[ret_1, ret_2]])[0]
+                            strat[trading_day][tick] = pred
+                            linear_coefs[tick]= linear_model.coef_
+                            xvals = sm.add_constant(linear_xvals[tick])
+                            new_model = sm.OLS(linear_yvals[tick], xvals)
+                            tval_model = new_model.fit()
+                            linear_tvals[tick] = tval_model.summary2().tables[1]['t']
+                        else:
+                            linear_xvals[tick] = []
+                            linear_yvals[tick] = []
+                            linear_tvals[tick] = []
+                            linear_coefs[tick] = []
+                            final_prices[tick] = []
+                        linear_xvals[tick].append([ret_1, ret_2])
+                        final_prices[tick].append([final_price, row_ind])
 
         strat_ticks = {}
 
@@ -147,7 +216,7 @@ class Ticker:
                 strat_ticks[trading_day].append(list(ranked.keys())[num])
                 num += 1
 
-        return strat_ticks
+        return (strat_ticks, linear_tvals, linear_coefs)
 
     def compute_trading_data(self, tickers_list, beginning_date, ending_date, aum):
         '''
@@ -617,7 +686,7 @@ def main (tickers,b_date,e_date,initial_aum,strategy1_type,days1,strategy2_type,
         raise ValueError('--days is not a positive number.')
     if top_pct < 1 or top_pct > 100:
         raise ValueError('The integer for the percentage of stocks needs to be between 1 and 100.')
-    if strategy1_type != 'M' or 'R' and strategy2_type != 'R' or 'M':
+    if strategy1_type not in ['M','R'] or strategy2_type not in ['R','M']:
         raise ValueError('There is no such strategy type.')
     if initial_aum <= 0:
         raise ValueError('The initial asset under management is not a positive value')
@@ -684,15 +753,25 @@ def main (tickers,b_date,e_date,initial_aum,strategy1_type,days1,strategy2_type,
             responses.append('This stock was not purchased in the strategy.')
     prompts += ["Total Return:  ", "Annualized RoR:  ", "Initial AUM:  ", "Final AUM:  ",
     "Average AUM:  ", "Maximum AUM:  ", "PnL of AUM:  ", "Average Daily Return:  ",
-    "SD of Daily Return:  ", "Daily Sharpe Ratio:  "]
+    "SD of Daily Return:  ", "Daily Sharpe Ratio:  ", "Linear Reg Models:  "]
     responses += [round(total_return,5), round(aror,5), round(initial_aum,2), round(final_aum,2),
     round(average_aum,2), round(max_aum,2), round(pnl,5), round(adr,5), round(std,5),
-    round(sharpe,5)]
-    numbers += ["(5)", "(6)", "(7)", "(8)", "(9)", "(10)", "(11)", "(12)", "(13)", "(14)"]
+    round(sharpe,5), 
+    'Strategy 1 (%s-%d)  ||  Strategy 2 (%s-%d)' % (strategy1_type, days1, strategy2_type, days2)]
+    numbers += ["(5)", "(6)", "(7)", "(8)", "(9)", "(10)", "(11)", "(12)", "(13)", "(14)", "(15)"]
+    for tick, vals in portfolio.tick_data.coefs.items():
+        prompts += ['', tick+":  ", ""]
+        numbers += ['', '', '']
+        coef1 = '{: f}'.format(round(vals[0], 5))
+        coef2 = '{: f}'.format(round(vals[1], 5))
+        tval1 = '{: f}'.format(round(portfolio.tick_data.tvals[tick][1], 5))
+        tval2 = '{: f}'.format(round(portfolio.tick_data.tvals[tick][2], 5))
+        responses += ['-----------------------------------------',
+                      'Coeff  %s  ||            %s' % (coef1, tval1),
+                      'T-Val  %s  ||            %s' % (coef2, tval2)]
 
     for (n_index, number_value) in enumerate(numbers):
         print(f"{number_value:>4}{prompts[n_index]:>25}{responses[n_index]:<3}")
-
     script_dir = os.path.dirname(__file__)
     plots_dir = os.path.join(script_dir, 'Plots/')
     if not os.path.isdir(plots_dir):
