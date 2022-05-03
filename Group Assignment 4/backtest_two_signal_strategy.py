@@ -1,14 +1,23 @@
 '''
 Author: Vasu Namdea & Peng Chiao-Yin (Joy)
-Date: 14 Apr 2022
+Date: 4 May 2022
 
 This program fetches daily close prices from the internet for given tickers and time frame,
-and then back tests some simple momentum and reversal monthly strategies.
+and then back tests some simple momentum and reversal monthly strategies in conjuction to
+figure out the most optimum coefficients for their weightage under a linear regression,
+building on the existing predictions
 
 The program can be called using:
 backtest_two_signal_strategy.py --tickers <ttt> –-b <YYYYMMDD> –-e <YYYYMMMDD>
 --initial_aum <yyyy>  --strategy1_type <xx> --days1 <xx> ---strategy2_type <xx>
 --days2 <xx> --top_pct <xx>
+
+A sample means for calling the function is:
+python backtest_two_signal_strategy.py 
+--ticker 'AAPL,TSLA,MSFT,FB,WMT,PFE,SPY,AMZN,BXP,DLR,QQQ,VUG,IWF,IJH' 
+--b 20210112 --e 20220503 --initial_aum 1000 --strategy1_type 'M' 
+--days1 50 --strategy2_type 'M' --days2 100 --top_pct 25
+
 '''
 import argparse
 import os
@@ -59,10 +68,10 @@ class Ticker:
     compute_giant_date(tickers_list, beginning_date, ending_date):
         This function pulls data for all of the stocks provided and fetches the dates of
         the last trading days of each month
-    compute_strategy(strategy_type, days):
-        This function checks against the specific returns for each stock on each trading day
-        and selects the top few to be bought on that day, based on the strategy_type provided
-        by the user
+    compute_strategy(strategy1_type, days1, strategy2_type, days2, tickers,list):
+        This function performs linear regression to build on past data and generate coefficients
+        of the different strategy types to best predict the stocks to go long with for the
+        next month
     compute_trading_data(tickers_list, beginning_date, ending_date, aum):
         This function generates the slightly smaller dictionary of key information, such as the
         number of shares owned, the dividends the user will received, value of AUM in each stock
@@ -78,7 +87,7 @@ class Ticker:
         self.strnum = ceil(len(tickers_list) * (top_pct/100))
         print('Computing strategy...')
         (self.strat, self.tvals, self.coefs)=self.compute_strategy(\
-            strategy1_type, days1, strategy2_type, days2)
+            strategy1_type, days1, strategy2_type, days2, tickers_list)
         print('Generating returns...')
         self.trading_data=self.compute_trading_data(tickers_list,beginning_date,ending_date,aum)[0]
     def compute_giant_date(self, tickers_list, beginning_date, ending_date):
@@ -122,7 +131,7 @@ class Ticker:
                             dates.append(comp)
                     comp = cur_date
         return (giant, dates)
-    def compute_strategy(self, strategy1_type, days1, strategy2_type, days2):
+    def compute_strategy(self, strategy1_type, days1, strategy2_type, days2, tickers_list):
         '''
         This function performs linear regression to calculate which stocks should be bought
         on each trading datafter weighing the returns from utilizing each strategy provided
@@ -133,6 +142,7 @@ class Ticker:
         strategy2_type (str): same as above, but the second one
         days1 (int): the first numbers of trading days used to compute strategy-related returns
         days2 (int): same as above, but the second one
+        tickers_list (list): a list of the 4-character ticker names, as provided by the user
 
         Returns:
         strat_ticks (dictionary): contains the list of stocks that need to be bought
@@ -140,13 +150,13 @@ class Ticker:
         '''
         strat = {}
         final_prices = {}
-        linear_xvals = {}
-        linear_yvals = {}
-        linear_tvals = {}
-        linear_coefs = {}
+        linear_xvals = []
+        linear_yvals = []
 
         for trading_day in self.predates:    
             for tick, data in self.giant.items():
+                if tick not in final_prices:
+                    final_prices[tick] = []
                 for (row_ind, row_val) in enumerate(data['Close']):
                     cur_date = data['Close'].index[row_ind].date()
                     if cur_date == trading_day:
@@ -177,34 +187,32 @@ class Ticker:
                             for day in range(row_ind-20-days2, row_ind-19):
                                 divp_2 += data['Dividends'][day]
                         ret_2 = (endp_2 - sttp_2 + divp_2) / sttp_2
-                        if tick in linear_xvals:
+                        linear_xvals.append([ret_1, ret_2])
+                        final_prices[tick].append([final_price, row_ind])
+                        if len(linear_xvals) > len(tickers_list):
                             if trading_day not in strat:
                                 strat[trading_day] = {}
                             endp = row_val
-                            sttp = final_prices[tick][len(linear_yvals[tick])][0]
+                            sttp = final_prices[tick][-2][0]
                             divp = 0
-                            for day in range(final_prices[tick]\
-                                [len(linear_yvals[tick])][1], row_ind+1):
+                            for day in range(final_prices[tick][-2][1], row_ind+1):
                                 divp += data['Dividends'][day]
                             ret = (endp - sttp + divp) / sttp
-                            linear_yvals[tick].append(ret)
-                            linear_model = LinearRegression().fit(\
-                                linear_xvals[tick], linear_yvals[tick])
-                            pred = linear_model.predict([[ret_1, ret_2]])[0]
-                            strat[trading_day][tick] = pred
-                            linear_coefs[tick]= linear_model.coef_
-                            xvals = sm.add_constant(linear_xvals[tick])
-                            new_model = sm.OLS(linear_yvals[tick], xvals)
-                            tval_model = new_model.fit()
-                            linear_tvals[tick] = tval_model.summary2().tables[1]['t']
-                        else:
-                            linear_xvals[tick] = []
-                            linear_yvals[tick] = []
-                            linear_tvals[tick] = []
-                            linear_coefs[tick] = []
-                            final_prices[tick] = []
-                        linear_xvals[tick].append([ret_1, ret_2])
-                        final_prices[tick].append([final_price, row_ind])
+                            linear_yvals.append(ret)
+                            if len(linear_yvals) % len(tickers_list) == 0 and \
+                                len(linear_yvals) != 0:
+                                linear_model = LinearRegression().fit(\
+                                    linear_xvals[:-len(tickers_list)], linear_yvals)
+                                for ind, tick in enumerate(tickers_list):
+                                    values = linear_xvals[ind-len(tickers_list)]
+                                    pred = linear_model.predict([values])[0]
+                                    strat[trading_day][tick] = pred
+
+        linear_coefs= linear_model.coef_
+        xvals = sm.add_constant(linear_xvals[:-len(tickers_list)])
+        new_model = sm.OLS(linear_yvals, xvals)
+        tval_model = new_model.fit()
+        linear_tvals = tval_model.summary2().tables[1]['t']              
 
         strat_ticks = {}
 
@@ -759,16 +767,16 @@ def main (tickers,b_date,e_date,initial_aum,strategy1_type,days1,strategy2_type,
     round(sharpe,5), 
     'Strategy 1 (%s-%d)  ||  Strategy 2 (%s-%d)' % (strategy1_type, days1, strategy2_type, days2)]
     numbers += ["(5)", "(6)", "(7)", "(8)", "(9)", "(10)", "(11)", "(12)", "(13)", "(14)", "(15)"]
-    for tick, vals in portfolio.tick_data.coefs.items():
-        prompts += ['', tick+":  ", ""]
-        numbers += ['', '', '']
-        coef1 = '{: f}'.format(round(vals[0], 5))
-        coef2 = '{: f}'.format(round(vals[1], 5))
-        tval1 = '{: f}'.format(round(portfolio.tick_data.tvals[tick][1], 5))
-        tval2 = '{: f}'.format(round(portfolio.tick_data.tvals[tick][2], 5))
-        responses += ['-----------------------------------------',
-                      'Coeff  %s  ||            %s' % (coef1, tval1),
-                      'T-Val  %s  ||            %s' % (coef2, tval2)]
+    coefs = portfolio.tick_data.coefs
+    prompts += ['', "Coeff:  ", "T-Val:  "]
+    numbers += ['', '', '']
+    coef1 = '{: f}'.format(round(coefs[0], 5))
+    coef2 = '{: f}'.format(round(coefs[1], 5))
+    tval1 = '{: f}'.format(round(portfolio.tick_data.tvals[1], 5))
+    tval2 = '{: f}'.format(round(portfolio.tick_data.tvals[2], 5))
+    responses += ['-----------------------------------------',
+                    '       %s  ||           %s' % (coef1, tval1),
+                    '       %s  ||           %s' % (coef2, tval2)]
 
     for (n_index, number_value) in enumerate(numbers):
         print(f"{number_value:>4}{prompts[n_index]:>25}{responses[n_index]:<3}")
