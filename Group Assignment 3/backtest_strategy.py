@@ -165,7 +165,7 @@ class Ticker:
         of the dates within the period
         ic_values (dictionary): a dictionary tracking the changes in the information coefficient
         throughout the trading days, based on the perfomance of the stocks predicted by the
-        strategy 
+        strategy
         '''
         trading_data = {}
         ic_values = {}
@@ -179,7 +179,7 @@ class Ticker:
                             if tick in self.strat[cur_date]:
                                 shares = (aum/self.strnum) / self.giant[tick]['Close'][row]
                                 trading_data[str(cur_date)][tick] = \
-                                [self.giant[tick]['Close'][row],(aum/self.strnum), shares, 
+                                [self.giant[tick]['Close'][row],(aum/self.strnum), shares,
                                 self.giant[tick]['Dividends'][row]]
                             else:
                                 trading_data[str(cur_date)][tick] = \
@@ -198,7 +198,7 @@ class Ticker:
                             if tick in self.strat[cur_date]:
                                 shares = (new_aum/self.strnum) / self.giant[tick]['Close'][row]
                                 trading_data[str(cur_date)][tick] = \
-                                [self.giant[tick]['Close'][row],(new_aum/self.strnum), shares, 
+                                [self.giant[tick]['Close'][row],(new_aum/self.strnum), shares,
                                 self.giant[tick]['Dividends'][row]]
                             else:
                                 trading_data[str(cur_date)][tick] = \
@@ -630,7 +630,7 @@ def main (tickers, b_date, e_date, initial_aum, strategy_type, days, top_pct):
                 raise ValueError("The ending date is after today's date. No data available.")
     except ValueError as v_e:
         raise ValueError('You have entered an invalid date.') from v_e
-    
+
     tickers_list = tickers.split(',')
     for ticker in tickers_list:
         print('Verifying %s...' % ticker)
@@ -680,7 +680,7 @@ def main (tickers, b_date, e_date, initial_aum, strategy_type, days, top_pct):
         else:
             responses.append('This stock was not purchased in the strategy.')
     prompts += ["Total Return:  ", "Annualized RoR:  ", "Initial AUM:  ", "Final AUM:  ",
-    "Average AUM:  ", "Maximum AUM:  ", "PnL of AUM:  ", "Average Daily Return:  ", 
+    "Average AUM:  ", "Maximum AUM:  ", "PnL of AUM:  ", "Average Daily Return:  ",
     "SD of Daily Return:  ", "Daily Sharpe Ratio:  "]
     responses += [round(total_return,5), round(aror,5), round(initial_aum,2), round(final_aum,2),
     round(average_aum,2), round(max_aum,2), round(pnl,5), round(adr,5), round(std,5),

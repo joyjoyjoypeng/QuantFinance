@@ -11,22 +11,17 @@ import pytest
 def test_main_argument():
     '''
     This function tests whether invalid arguments raise an error
-
-    Inputs:
-        -- No inputs are required as this function assumes an error will be raised
-        when insufficient arguments or incorrennt argument types are passed to the main function --
-
-    Returns:
-        -- Nothing should be returned ideally if only the predicted errors are raised --
     '''
     with pytest.raises(TypeError):
         backtest_strategy.main('AAPL,TSLA', 20210112, 20220412, "1000", "M", 100, 70)
     with pytest.raises(NameError):
         backtest_strategy.main('Fake,TSLA', 20210112, 20220412, 1000, "M", 100, 70)
-    with pytest.raises(TypeError):
-        backtest_strategy.main("MSFT,TSLA", 100000)
+    with pytest.raises(ValueError):
+        backtest_strategy.main('AAPL,TSLA', 20220112, 20210412, 1000, "M", 100, 70)
     with pytest.raises(ValueError):
         backtest_strategy.main('AAPL,TSLA', 2021010, 20220412, 1000, "M", 100, 70)
+    with pytest.raises(ValueError):
+        backtest_strategy.main('AAPL,TSLA', 20220401, 20220412, 1000, "M", 100, 70)
 
 def test_portfolio_class():
     '''
@@ -73,8 +68,8 @@ def test_main_no_end_date():
     tr_today = portfolio_today.calc_tr(portfolio_today.beginning_date, portfolio_today.ending_date)
     assert round(tr_main,4) == round(tr_today,4)
     assert round(portfolio_main.calc_aror(tr_main),4)==round(portfolio_today.calc_aror(tr_today),4)
-    assert round(portfolio_main.get_final_value(portfolio_main.ending_date),4) == round(
-        portfolio_today.get_final_value(portfolio_today.ending_date),4)
+    assert round(portfolio_main.get_final_value(portfolio_main.ending_date),3) == round(
+        portfolio_today.get_final_value(portfolio_today.ending_date),3)
     assert round(portfolio_main.calc_avg_aum(),4) == round(portfolio_today.calc_avg_aum(),4)
     assert round(portfolio_main.get_max_aum(),4) == round(portfolio_today.get_max_aum(),4)
     assert round(portfolio_main.get_pnl(portfolio_main.beginning_date,portfolio_main.ending_date),
