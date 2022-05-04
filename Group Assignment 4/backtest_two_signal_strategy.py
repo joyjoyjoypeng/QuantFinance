@@ -13,9 +13,9 @@ backtest_two_signal_strategy.py --tickers <ttt> –-b <YYYYMMDD> –-e <YYYYMMMD
 --days2 <xx> --top_pct <xx>
 
 A sample means for calling the function is:
-python backtest_two_signal_strategy.py 
---ticker 'AAPL,TSLA,MSFT,FB,WMT,PFE,SPY,AMZN,BXP,DLR,QQQ,VUG,IWF,IJH' 
---b 20210112 --e 20220503 --initial_aum 1000 --strategy1_type 'M' 
+python backtest_two_signal_strategy.py
+--ticker 'AAPL,TSLA,MSFT,FB,WMT,PFE,SPY,AMZN,BXP,DLR,QQQ,VUG,IWF,IJH'
+--b 20210112 --e 20220503 --initial_aum 1000 --strategy1_type 'M'
 --days1 50 --strategy2_type 'M' --days2 100 --top_pct 25
 
 '''
@@ -23,13 +23,13 @@ import argparse
 import os
 from datetime import date, timedelta
 from math import ceil
+import warnings
 import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
-import warnings
 warnings.filterwarnings('ignore')
 
 class Ticker:
@@ -57,7 +57,7 @@ class Ticker:
     tvals : list
         The t-values of the coefficients of each stock's final linear model
     coefs : list
-        The coefficients of each stock's final linear model for each strategy's returns 
+        The coefficients of each stock's final linear model for each strategy's returns
     trading_data : dictionary
         A slightly smaller dictionary that only contains data for the days on which the
         user has ownership of the stock based on the trading strategy, and contains data
@@ -153,7 +153,7 @@ class Ticker:
         linear_xvals = []
         linear_yvals = []
 
-        for trading_day in self.predates:    
+        for trading_day in self.predates:
             for tick, data in self.giant.items():
                 if tick not in final_prices:
                     final_prices[tick] = []
@@ -212,7 +212,7 @@ class Ticker:
         xvals = sm.add_constant(linear_xvals[:-len(tickers_list)])
         new_model = sm.OLS(linear_yvals, xvals)
         tval_model = new_model.fit()
-        linear_tvals = tval_model.summary2().tables[1]['t']              
+        linear_tvals = tval_model.summary2().tables[1]['t']
 
         strat_ticks = {}
 
@@ -764,7 +764,7 @@ def main (tickers,b_date,e_date,initial_aum,strategy1_type,days1,strategy2_type,
     "SD of Daily Return:  ", "Daily Sharpe Ratio:  ", "Linear Reg Models:  "]
     responses += [round(total_return,5), round(aror,5), round(initial_aum,2), round(final_aum,2),
     round(average_aum,2), round(max_aum,2), round(pnl,5), round(adr,5), round(std,5),
-    round(sharpe,5), 
+    round(sharpe,5),
     'Strategy 1 (%s-%d)  ||  Strategy 2 (%s-%d)' % (strategy1_type, days1, strategy2_type, days2)]
     numbers += ["(5)", "(6)", "(7)", "(8)", "(9)", "(10)", "(11)", "(12)", "(13)", "(14)", "(15)"]
     coefs = portfolio.tick_data.coefs

@@ -37,37 +37,38 @@ def test_portfolio_class():
     This function tests whether the Portfolio() class stores, computer,
     and retrieves data correctly.
     '''
-    tickers = 'AAPL,TSLA'
+    tickers = 'AAPL,TSLA,MSFT,FB'
     tickers_list = tickers.split(',')
     portfolio = backtest_two_signal_strategy.Portfolio(tickers_list, date(2021,1,12),
-    date(2022, 4, 12), 1000, "M", 100, "R", 100, 70)
+    date(2022, 5, 4), 1000, "M", 100, "R", 100, 25)
     assert portfolio.beginning_date == '2021-01-12'
-    assert portfolio.ending_date == '2022-04-11'
-    assert portfolio.calc_num_of_days(portfolio.beginning_date, portfolio.ending_date) == 454
+    assert portfolio.ending_date == '2022-05-03'
+    assert portfolio.calc_num_of_days(portfolio.beginning_date, portfolio.ending_date) == 476
     total_return = portfolio.calc_tr(portfolio.beginning_date, portfolio.ending_date)
-    assert round(total_return,4) == 0.2775
-    assert round(portfolio.calc_aror(total_return),4) == 0.2146
-    assert round(portfolio.get_final_value(portfolio.ending_date),3) == 1277.523
-    assert round(portfolio.calc_avg_aum(),3) == 1079.963
-    assert round(portfolio.get_max_aum(),3) == 1478.228
-    assert round(portfolio.get_pnl(portfolio.beginning_date, portfolio.ending_date),4) == 0.2775
+    assert round(total_return,4) == -0.4627
+    assert round(portfolio.calc_aror(total_return),4) == -0.3754
+    assert round(portfolio.get_final_value(portfolio.ending_date),2) == 537.26
+    assert round(portfolio.calc_avg_aum(),2) == 806.43
+    assert round(portfolio.get_max_aum(),2) == 1099.88
+    assert round(portfolio.get_pnl(portfolio.beginning_date, portfolio.ending_date),4) == -0.4627
     adr = portfolio.get_adr(total_return)
-    assert round(adr,6) == 0.000881
+    assert round(adr,4) == -0.0014
     std = portfolio.get_std()
-    assert round(std,4) == 0.0232
+    assert round(std,4) == 0.0334
     sharpe = portfolio.get_sharpe(adr, std)
-    assert round(sharpe,4) == 0.0336
+    assert round(sharpe,5) == -0.04498
 
 def test_main_no_end_date():
     '''
     This function tests whether the main() class stores, computer, and retrieves data correctly
     given that the optional ending date argument is not present
     '''
-    tickers = 'AAPL,TSLA'
+    tickers = 'AAPL,TSLA,MSFT,FB'
     tickers_list = tickers.split(',')
-    portfolio_main = backtest_two_signal_strategy.main('AAPL,TSLA', 20210112, None, 1000, "M", 100, "R", 100, 70)
-    portfolio_today = backtest_two_signal_strategy.Portfolio(tickers_list, date(2021, 1, 12),
-    date.today(), 1000, "M", 100, "R", 100, 70)
+    portfolio_main = backtest_two_signal_strategy.main('AAPL,TSLA,MSFT,FB', 20210112,
+    None, 1000, "M", 100, "R", 100, 25)
+    portfolio_today = backtest_two_signal_strategy.Portfolio(tickers_list, date(2021,1,12),
+    date.today(), 1000, "M", 100, "R", 100, 25)
     assert portfolio_main.beginning_date == portfolio_today.beginning_date
     assert portfolio_main.ending_date == portfolio_today.ending_date
     assert portfolio_main.calc_num_of_days(portfolio_main.beginning_date,
